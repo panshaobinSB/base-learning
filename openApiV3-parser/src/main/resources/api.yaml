@@ -1,0 +1,104 @@
+openapi: 3.0.0
+info:
+  title: Sample API
+  description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
+  version: 0.0.1
+
+servers:
+  - url: http://api.example.com/v1
+    description: Optional server description, e.g. Main (production) server
+  - url: http://staging-api.example.com
+    description: Optional server description, e.g. Internal staging server for testing
+
+paths:
+  /users/retrieve-user:
+    post:
+      summary: return a user.
+      description: return a user.
+      parameters:
+        - name: X-Group
+          description: group
+          in: header
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+            enum: ['A', 'B']
+          example: 'A'
+        - name: X-Token
+          description: token
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 20
+            pattern: "^[0-9]{1,18}$"
+          example: '123456'
+
+      requestBody:
+        description: request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/retrieveUserRequest'
+
+      responses:
+        '200':    # status code
+          description: user response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/retrieveUserResponse'
+
+components:
+  schemas:
+    retrieveUserRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          description: user id
+
+    retrieveUserResponse:
+      type: object
+      required:
+        - userName
+        - userNumber
+      properties:
+        userName:
+          type: array
+          items:
+            $ref: '#/components/schemas/userName'
+        userNumber:
+          type: string
+          description: user number
+
+    userName:
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        firstName:
+          $ref: '#/components/schemas/firstName'
+        lastName:
+          type: string
+          description: last name
+
+    firstName:
+      type: object
+      required:
+        - firstNameOne
+        - firstNameTwo
+      properties:
+        firstNameOne:
+          type: string
+          description: first name one
+        firstNameTwo:
+          type: string
+          description: first name two
