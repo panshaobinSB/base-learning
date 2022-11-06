@@ -1,4 +1,4 @@
-package com.panshao.graph;
+package com.panshao.model.graph;
 
 import java.util.*;
 
@@ -209,7 +209,8 @@ public class ListDirectGraph<V> implements IDirectGraph<V> {
     }
 
     @Override
-    public void topoSortByKahn() {
+    public List<List<GraphNode<V>>> topoSortByKahn() {
+        List<List<GraphNode<V>>> resultList = new ArrayList<>();
         Map<V,Integer> inDegree = new HashMap<>(); // 统计每个顶点的入度
         for(int i = 0; i < nodeList.size(); ++i){
             Set<Edge<V>> edgeSet = nodeList.get(i).getEdgeSet();
@@ -232,14 +233,20 @@ public class ListDirectGraph<V> implements IDirectGraph<V> {
         Map<V, GraphNode<V>> vertexGraphNodeMap = getVertexGraphNodeMap();
         int level = 0;
 
+        List<GraphNode<V>> firstLevelList = new ArrayList<>();
+        resultList.add(firstLevelList);
+
         while (!queue.isEmpty()) {
             V vertex = queue.remove();
             GraphNode<V> vGraphNode = vertexGraphNodeMap.get(vertex);
 
             if(vGraphNode.getLevel() != level){
+                List<GraphNode<V>> tempList = new ArrayList<>();
+                resultList.add(tempList);
                 System.out.println();
                 level = vGraphNode.getLevel();
             }
+            resultList.get(level).add(vGraphNode);
             System.out.print("->" + vertex + "("+ vGraphNode.getLevel() +")");
 
             Set<Edge<V>> edgeSet = vGraphNode.getEdgeSet();
@@ -263,5 +270,6 @@ public class ListDirectGraph<V> implements IDirectGraph<V> {
             }
 
         }
+        return resultList;
     }
 }

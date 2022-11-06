@@ -1,4 +1,4 @@
-package com.panshao.graph;
+package com.panshao.model.graph;
 
 import java.util.List;
 
@@ -63,5 +63,5 @@ public interface IDirectGraph<V> {
 
     List<V> dfs(final V root);
 
-    void topoSortByKahn();
+    List<List<GraphNode<V>>> topoSortByKahn();
 }

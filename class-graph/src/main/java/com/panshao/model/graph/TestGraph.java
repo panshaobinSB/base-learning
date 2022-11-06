@@ -1,4 +1,4 @@
-package com.panshao.graph;
+package com.panshao.model.graph;
 
 import com.panshao.PackageUtil;
 

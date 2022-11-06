@@ -1,0 +1,34 @@
+<idea-plugin>
+  <id>class-graph-plugin</id>
+  <name>class-graph</name>
+  <version>1.0</version>
+  <vendor email="1007299477@qq.com" >PSB</vendor>
+
+  <description><![CDATA[
+     can generate a full class graph of a project
+    ]]></description>
+
+  <change-notes><![CDATA[]]></change-notes>
+
+  <!-- please see https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html for description -->
+  <idea-version since-build="173.0"/>
+
+  <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
+       on how to target different products -->
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.lang</depends>
+  <depends>com.intellij.modules.java</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+  </extensions>
+
+  <actions>
+    <!-- Add your actions here -->
+    <action id="GenerateClassGraph" class="com.panshao.action.GenerateClassGraphAction" text="GenerateClassGraph"
+            description="GenerateClassGraph">
+      <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+    </action>
+  </actions>
+
+</idea-plugin>
