@@ -6,8 +6,8 @@ import java.awt.geom.Point2D;
 public class LineWithPoint {
     public static final int UP = 0;
     public static final int RIGHT = 1;
-    public static final int DOWN = 1;
-    public static final int LEFT = 1;
+    public static final int DOWN = 2;
+    public static final int LEFT = 3;
 
     private Line2D line2D;
     private Point2D point2D;

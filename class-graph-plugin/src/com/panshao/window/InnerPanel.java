@@ -83,12 +83,27 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
 
         if(count == 0) {
             initModel(g);
+            // calculate the size
             this.setSize(width, height);
             this.setPreferredSize(new Dimension(width, height));
         }
         count++;
-        // calculate the size
         repaintModel(g);
+    }
+
+    private void repaintCurrentModel(Graphics g){
+
+        g.setColor(paleTurquoise4);
+        ((Graphics2D)g).draw(currentClassGraphModel.getRetangle());
+
+        StringPoint stringPoint = currentClassGraphModel.getStringPoint();
+        g.setColor(khaki1);
+        g.drawString(stringPoint.getText(), stringPoint.getX(), stringPoint.getY());
+
+        g.setColor(paleGreen3);
+        for (LineWithPoint lineWithPoint : currentClassGraphModel.getLineWithPointList()) {
+            ((Graphics2D)g).draw(lineWithPoint.getLine2D());
+        }
     }
 
     private void repaintModel(Graphics g){
@@ -110,11 +125,17 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
     private void initModel(Graphics g){
         int stringHeight = g.getFontMetrics().getHeight();
         int rectHeight = stringHeight + 10;
-        int baseY = 50;
-        for (int i = 0; i < dataList.size(); i++) {
-            int baseX = 50;
-            baseY += rectHeight  + 50;
+        int baseX = 0;
+        int maxWidth = 0;
 
+        for (int i = 0; i < dataList.size(); i++) {
+            int baseY = 50;
+            baseX += maxWidth + 50;
+            if (baseX >= width) {
+                width = baseX + maxWidth + 50;
+            }
+
+            maxWidth = 0;
             for (int j = 0; j < dataList.get(i).size(); j++) {
 
                 // build model
@@ -122,9 +143,10 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
                 String className = classGraphNode.getVertex().getQualifiedName();
                 int stringWidth = g.getFontMetrics().stringWidth(className);
 
-                if (baseX >= width) {
-                    width = baseX + stringWidth + 10 + 50;
+                if(stringWidth > maxWidth){
+                    maxWidth = stringWidth;
                 }
+
                 if (baseY >= height) {
                     height = baseY + rectHeight + 50;
                 }
@@ -145,7 +167,7 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
 
                 classGraphModel.setLineWithPointList(new ArrayList<>());
 
-                baseX += stringWidth + 50 ;
+                baseY += rectHeight + 50 ;
 
                 map.put(classGraphNode.getVertex(), classGraphModel);
             }
@@ -157,27 +179,27 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
                 PsiClass vertex = classGraphNode.getVertex();
                 ClassGraphModel classGraphModel = map.get(vertex);
                 Rectangle retangle = classGraphModel.getRetangle();
-                double x1 = retangle.getX() + retangle.getWidth()/2;
-                double y1 = retangle.getY() + retangle.getHeight();
+                double x1 = retangle.getX() + retangle.getWidth();
+                double y1 = retangle.getY() + retangle.getHeight()/2;
 
                 for (Edge<PsiClass> classEdge : classGraphNode.getEdgeSet()) {
                     ClassGraphModel toClassGraphModel = map.get(classEdge.getTo());
                     Rectangle toRectangle = toClassGraphModel.getRetangle();
-                    double x2 = toRectangle.getX() + toRectangle.getWidth()/2;
-                    double y2 = toRectangle.getY();
+                    double x2 = toRectangle.getX();
+                    double y2 = toRectangle.getY() + toRectangle.getHeight()/2;
 
                     LineWithPoint lineWithPoint = new LineWithPoint();
                     Line2D line2D = new Line2D.Double(x1, y1, x2, y2);
                     lineWithPoint.setLine2D(line2D);
                     lineWithPoint.setPoint2D(line2D.getP1());
-                    lineWithPoint.setDirection(LineWithPoint.DOWN);
+                    lineWithPoint.setDirection(LineWithPoint.RIGHT);
 
                     classGraphModel.getLineWithPointList().add(lineWithPoint);
 
                     LineWithPoint lineWithPoint2 = new LineWithPoint();
                     lineWithPoint2.setLine2D(line2D);
                     lineWithPoint2.setPoint2D(line2D.getP2());
-                    lineWithPoint2.setDirection(LineWithPoint.UP);
+                    lineWithPoint2.setDirection(LineWithPoint.LEFT);
 
                     toClassGraphModel.getLineWithPointList().add(lineWithPoint2);
                 }
@@ -198,14 +220,23 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
 
         for (LineWithPoint lineWithPoint : map.get(aClass).getLineWithPointList()) {
             Line2D line2D = lineWithPoint.getLine2D();
-            if (lineWithPoint.getDirection() == LineWithPoint.UP) {
-                line2D.setLine(line2D.getP1(), new Point2D.Double(x + retangle.getWidth()/2, y));
+            if (lineWithPoint.getDirection() == LineWithPoint.LEFT) {
+                line2D.setLine(line2D.getP1(), new Point2D.Double(x, y + retangle.getHeight()/2));
 
-            }else if (lineWithPoint.getDirection() == LineWithPoint.DOWN) {
-                line2D.setLine(new Point2D.Double(x + retangle.getWidth()/2, y + retangle.getHeight()), line2D.getP2());
+            }else if (lineWithPoint.getDirection() == LineWithPoint.RIGHT) {
+                line2D.setLine(new Point2D.Double(x + retangle.getWidth(), y + retangle.getHeight()/2), line2D.getP2());
 
             }
         }
+
+        if (x + retangle.getWidth() + 50 > width) {
+            width = x + Double.valueOf(retangle.getWidth()).intValue() + 50;
+        }
+        if(y + retangle.getHeight() + 50 > height){
+            height = y + Double.valueOf(retangle.getHeight()).intValue() + 50;
+        }
+        this.setSize(width, height);
+        this.setPreferredSize(new Dimension(width, height));
     }
 
     @Override
@@ -220,7 +251,7 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
 
         graphics.setXORMode(getBackground());
 
-        repaintModel(graphics);
+        repaintCurrentModel(graphics);
 
         if(x < 0){
             x = 0;
@@ -232,7 +263,7 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
 
         updateModel(x, y);
 
-        repaintModel(graphics);
+        repaintCurrentModel(graphics);
 
         graphics.dispose();
 
