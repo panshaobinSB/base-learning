@@ -1,4 +1,4 @@
-package com.panshao.model.graph;
+package com.ps.model.graph;
 
 import java.util.Objects;
 

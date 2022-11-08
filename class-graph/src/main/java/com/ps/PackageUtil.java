@@ -1,4 +1,4 @@
-package com.panshao;
+package com.ps;
 
 import java.io.File;
 import java.net.URL;

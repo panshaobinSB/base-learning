@@ -1,4 +1,4 @@
-package com.panshao;
+package com.ps;
 
 import static org.junit.Assert.assertTrue;
 

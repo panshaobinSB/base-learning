@@ -1,5 +1,6 @@
 package com.panshao.action;
 
+import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.ide.projectView.ProjectView;
 import com.intellij.ide.projectView.impl.AbstractProjectViewPane;
 import com.intellij.ide.projectView.impl.ProjectRootsUtil;
@@ -7,96 +8,84 @@ import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode;
 import com.intellij.ide.util.treeView.NodeDescriptor;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.SourceFolder;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.file.PsiDirectoryImpl;
+import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.GlobalSearchScopes;
+import com.intellij.psi.search.searches.AllClassesSearch;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import com.panshao.model.graph.Edge;
+import com.intellij.util.indexing.FileBasedIndex;
 import com.panshao.model.graph.GraphNode;
-import com.panshao.model.graph.IDirectGraph;
 import com.panshao.utils.GraphUtil;
+import com.panshao.model.graph.IDirectGraph;
 import com.panshao.window.ClassGraphWindow;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GenerateClassGraphAction extends AnAction {
 
-    private List<PsiClass> getClassName(PsiPackage psiPackage, List<PsiClass> classNames){
-        List<PsiClass> myClassName = new ArrayList<>();
+    private List<PsiClass> getClasses(PsiPackage psiPackage, List<PsiClass> classList){
+        List<PsiClass> myClassList = new ArrayList<>();
         List<PsiClass> nameList = Arrays.stream(psiPackage.getClasses()).collect(Collectors.toList());
-        myClassName.addAll(nameList);
+        myClassList.addAll(nameList);
         if(psiPackage.getSubPackages() != null && psiPackage.getSubPackages().length > 0){
             for (PsiPackage subPackage : psiPackage.getSubPackages()) {
-                myClassName.addAll(getClassName(subPackage, myClassName));
+                myClassList.addAll(getClasses(subPackage, myClassList));
             }
         }
-        return myClassName;
+        return myClassList;
     }
 
     @Override
     public void actionPerformed(AnActionEvent e) {
 
         Project project = e.getProject();
-        // get the project packages
-        String[] packageNames = getPackageNames(project);
+        AbstractProjectViewPane currentProjectViewPane = ProjectView.getInstance(project).getCurrentProjectViewPane();
+        NodeDescriptor selectedDescriptor = currentProjectViewPane.getSelectedDescriptor();
+        PsiDirectoryNode psiDirectoryNode = (PsiDirectoryNode) selectedDescriptor;
+        PsiDirectory psiDirectory = psiDirectoryNode.getValue();
+        GlobalSearchScope globalSearchScope = GlobalSearchScopes.directoryScope(psiDirectory, true);
 
-        // generate the class graph data List<List<GraphNode<V>>> by packages
-        List<PsiClass> classNames = new ArrayList<>();
-        for (String packageName : packageNames) {
-            PsiPackage psiPackage = JavaPsiFacade.getInstance(project).findPackage(packageName);
-            List<PsiClass> tempList = getClassName(psiPackage, null);
-            classNames.addAll(tempList);
+        // Collection<PsiClass> allClass = AllClassesSearch.search(globalSearchScope, project).findAll();
+
+        List<PsiClass> classes = new ArrayList<>();
+        Collection<VirtualFile> containingFiles = FileBasedIndex.getInstance()
+                .getContainingFiles(
+                        FileTypeIndex.NAME,
+                        JavaFileType.INSTANCE,
+                        globalSearchScope);
+
+        for (VirtualFile virtualFile : containingFiles) {
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+            if (psiFile instanceof PsiJavaFile) {
+                PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
+                PsiClass[] javaFileClasses = psiJavaFile.getClasses();
+
+                for (PsiClass javaFileClass : javaFileClasses) {
+                    classes.add(javaFileClass);
+                }
+            }
         }
 
         IDirectGraph<PsiClass> graph = null;
         try {
-            graph = GraphUtil.getGraphBy(classNames);
+            graph = GraphUtil.getGraphBy(classes);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
         List<List<GraphNode<PsiClass>>> dataList = graph.topoSortByKahn();
-//        List<List<GraphNode<Class>>> dataList = new ArrayList<>();
-//        dataList.add(new ArrayList<>());
-//        dataList.add(new ArrayList<>());
-//        dataList.add(new ArrayList<>());
-//
-//        Class<?> objectClass = null;
-//        Class<?> listClass = null;
-//        Class<?> stringClass = null;
-//        Class<?> arrayListClass = null;
-//        try {
-//            objectClass = Class.forName("java.lang.Object");
-//            listClass = Class.forName("java.util.List");
-//            stringClass = Class.forName("java.lang.String");
-//            arrayListClass = Class.forName("java.util.ArrayList");
-//        } catch (ClassNotFoundException classNotFoundException) {
-//            classNotFoundException.printStackTrace();
-//        }
-//        GraphNode<Class> graphNode = new GraphNode<>(objectClass);
-//        graphNode.add(new Edge<>(objectClass, listClass));
-//        graphNode.add(new Edge<>(objectClass, stringClass));
-//        dataList.get(0).add(graphNode);
-//
-//        GraphNode<Class> graphNodeList = new GraphNode<>(listClass);
-//        graphNodeList.add(new Edge<>(listClass, arrayListClass));
-//        dataList.get(1).add(graphNodeList);
-//
-//        GraphNode<Class> graphNodeString = new GraphNode<>(stringClass);
-//        dataList.get(1).add(graphNodeString);
-//
-//        GraphNode<Class> graphNodeArrayList = new GraphNode<>(arrayListClass);
-//        dataList.get(2).add(graphNodeArrayList);
 
         // past data to init the toolWindow
 
@@ -125,10 +114,12 @@ public class GenerateClassGraphAction extends AnAction {
             PsiDirectory psiDirectory = psiDirectoryNode.getValue();
 
             if (ProjectRootsUtil.isSourceRoot(psiDirectory)) {
+
                 packagePath = getPackageNames(psiDirectory.getChildren());
 
             }else if (ProjectRootsUtil.isProjectHome(psiDirectory)) {
                 if(psiDirectory.getChildren() != null && psiDirectory.getChildren().length > 0){
+
                     for(int i = 0; i < psiDirectory.getChildren().length; i++){
                         if (psiDirectory.getChildren()[i] instanceof PsiDirectoryImpl &&
                             "src".equals(((PsiDirectoryImpl) psiDirectory.getChildren()[i]).getName())) {
@@ -152,6 +143,11 @@ public class GenerateClassGraphAction extends AnAction {
                 }
                 packagePath = new String[1];
                 packagePath[0] = tempPackagePath.substring(0, tempPackagePath.length() - 1);
+
+            } else if (ProjectRootsUtil.isModuleContentRoot(psiDirectory)) {
+                // TODO
+
+
             }
         }
 
@@ -198,7 +194,9 @@ public class GenerateClassGraphAction extends AnAction {
             PsiDirectoryNode psiDirectoryNode = (PsiDirectoryNode) selectedDescriptor;
             if(ProjectRootsUtil.isInSource(psiDirectoryNode.getValue()) ||
                     ProjectRootsUtil.isSourceRoot(psiDirectoryNode.getValue()) ||
-                      ProjectRootsUtil.isProjectHome(psiDirectoryNode.getValue())){
+                    ProjectRootsUtil.isProjectHome(psiDirectoryNode.getValue()) ||
+                    ProjectRootsUtil.isModuleContentRoot(psiDirectoryNode.getValue())
+            ){
                 showAction = true;
             }
         }

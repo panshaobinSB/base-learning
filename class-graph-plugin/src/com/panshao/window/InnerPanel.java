@@ -7,11 +7,11 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.panshao.model.graph.Edge;
+import com.panshao.model.graph.GraphNode;
 import com.panshao.model.data.ClassGraphModel;
 import com.panshao.model.data.LineWithPoint;
 import com.panshao.model.data.StringPoint;
-import com.panshao.model.graph.Edge;
-import com.panshao.model.graph.GraphNode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -113,7 +113,7 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
         int baseY = 50;
         for (int i = 0; i < dataList.size(); i++) {
             int baseX = 50;
-            baseY += (rectHeight  + 50) * i;
+            baseY += rectHeight  + 50;
 
             for (int j = 0; j < dataList.get(i).size(); j++) {
 
@@ -145,7 +145,7 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
 
                 classGraphModel.setLineWithPointList(new ArrayList<>());
 
-                baseX += stringWidth + 50 * (j + 1);
+                baseX += stringWidth + 50 ;
 
                 map.put(classGraphNode.getVertex(), classGraphModel);
             }

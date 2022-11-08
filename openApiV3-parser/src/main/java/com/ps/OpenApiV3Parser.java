@@ -1,4 +1,4 @@
-package com.panshao;
+package com.ps;
 
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.beans.MethodAppearanceFineTuner;

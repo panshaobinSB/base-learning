@@ -1,6 +1,6 @@
-package com.panshao.model.graph;
+package com.ps.model.graph;
 
-import com.panshao.PackageUtil;
+import com.ps.PackageUtil;
 
 import java.util.*;
 import java.util.regex.Pattern;
