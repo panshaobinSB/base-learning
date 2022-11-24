@@ -57,6 +57,7 @@ public class GenerateClassGraphAction extends AnAction {
         PsiDirectory psiDirectory = psiDirectoryNode.getValue();
         GlobalSearchScope globalSearchScope = GlobalSearchScopes.directoryScope(psiDirectory, true);
 
+        // this way is too slow to search
         // Collection<PsiClass> allClass = AllClassesSearch.search(globalSearchScope, project).findAll();
 
         List<PsiClass> classes = new ArrayList<>();

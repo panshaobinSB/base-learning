@@ -1,6 +1,7 @@
 package com.panshao.utils;
 
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiField;
 import com.panshao.model.graph.Edge;
 import com.panshao.model.graph.IDirectGraph;
 import com.panshao.model.graph.ListDirectGraph;
@@ -16,7 +17,7 @@ public class GraphUtil {
         for (PsiClass psiClass : psiClasses) {
             directGraph.addVertex(psiClass);
 
-            if(psiClass.getSuperClass() != null){
+            if(psiClass.getSuperClass() != null && !"java.lang.Object".equals(psiClass.getSuperClass().getQualifiedName())){
                 directGraph.addVertex(psiClass.getSuperClass());
                 directGraph.addEdge(new Edge<>(psiClass.getSuperClass(), psiClass, 0.0));
             }
@@ -29,6 +30,14 @@ public class GraphUtil {
             }
 
             // TODO fields
+            if(psiClass.getFields() != null && psiClass.getFields().length > 0){
+                for (PsiField field : psiClass.getFields()) {
+                    String canonicalText = field.getType().getCanonicalText();
+
+                }
+            }
+
+
         }
 
         return directGraph;

@@ -1,6 +1,7 @@
 package com.panshao.window;
 
 import com.intellij.ide.projectView.ProjectView;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
@@ -63,6 +64,9 @@ public class InnerPanel<V> extends JPanel implements MouseMotionListener {
                 ProjectView.getInstance(project).
                         getCurrentProjectViewPane().
                         select(null, virtualFile, true);
+
+                FileEditorManager instance = FileEditorManager.getInstance(project);
+                instance.openFile(virtualFile, true);
             }
 
             @Override
